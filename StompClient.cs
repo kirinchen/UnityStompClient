@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System;
+using surfm.tool;
 
 namespace UnityStomp {
     public delegate void OnMessageListener(string msg);
@@ -8,7 +9,7 @@ namespace UnityStomp {
     public interface StompClient {
         void SetCookie(string name, string value);
 
-        void StompConnect(Action<object> openAction);
+        CallbackList StompConnect();
 
         void setOnErrorAndClose(Action<string> errorCb, Action<string> closedCb);
 

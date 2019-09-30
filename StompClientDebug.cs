@@ -5,6 +5,7 @@ using UnityStomp;
 using BestHTTP.WebSocket;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using surfm.tool;
 
 namespace UnityStomp {
     public class StompClientDebug : StompClient {
@@ -35,8 +36,8 @@ namespace UnityStomp {
         public void setOnErrorAndClose(Action<string> errorCb, Action<string> cCb) {
         }
 
-        public void StompConnect(Action<object> openAction) {
-            openAction(null);
+        public CallbackList StompConnect() {
+            return null;
         }
 
         public void Subscribe(string destination, OnMessageListener act) {

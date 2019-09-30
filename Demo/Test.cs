@@ -6,7 +6,7 @@ using UnityStomp;
 public class Test : MonoBehaviour {
 
     private StompClient stompClient;
-    public InputField showMsgText,sendMsgText;
+    public InputField showMsgText, sendMsgText;
 
 
 
@@ -16,8 +16,8 @@ public class Test : MonoBehaviour {
 
     public void connect() {
         stompClient = new StompClientAll("ws://127.0.0.1:8080/gs-guide-websocket");
-        stompClient.StompConnect(_s => {
-            Debug.Log("Connect:"+_s);
+        stompClient.StompConnect().add(() => {
+            Debug.Log("Connected!!!");
             stompClient.Subscribe("/topic/greetings", onMsg);
         });
     }
@@ -32,7 +32,7 @@ public class Test : MonoBehaviour {
 
     public void send() {
         SendData sd = new SendData() { name = sendMsgText.text };
-        string jStr= JsonConvert.SerializeObject(sd);
+        string jStr = JsonConvert.SerializeObject(sd);
         stompClient.SendMessage("/app/hello", jStr);
     }
 

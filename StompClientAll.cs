@@ -5,20 +5,21 @@ using UnityStomp;
 using BestHTTP.WebSocket;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using surfm.tool;
 
 namespace UnityStomp {
     public class StompClientAll : StompClient {
 
         private string sessionId;
-
         public WebSocket websocket;
         public static string acceptVersion = "1.1,1.0";
         public static string heartBeat = "10000,10000";
         private Action<string> onErrorCb = (s) => { };
         private Action<string> onCloseCb = (s) => { };
+        private CallbackList connectedDone = new CallbackList();
         private Dictionary<string, OnMessageListener> actionMap = new Dictionary<string, OnMessageListener>();
+        private Dictionary<string, string> subscribeIdMap = new Dictionary<string, string>();
         public int subNo;
-
 
         public StompClientAll(string connectString, string sid = null) {
             sessionId = string.IsNullOrEmpty(sid) ? UidUtils.getRandomString(8) : sid;
@@ -32,14 +33,8 @@ namespace UnityStomp {
         }
 
         //Stomp Connect...
-        public void StompConnect(Action<object> openAction) {
-
-            websocket.OnOpen += (sender) => {
-                Debug.Log("WebSocket connect...... ");
-                onOpened();
-                openAction(sender);
-            };
-
+        public CallbackList StompConnect() {
+            websocket.OnOpen += onOpened;
             websocket.OnMessage += (sender, e) => {
                 WsResponse resp = new WsResponse(e);
                 if (resp.parse()) {
@@ -49,9 +44,7 @@ namespace UnityStomp {
                         a(resp.getMessage());
                     }
                 }
-
             };
-
             websocket.OnError += (sender, e) => {
                 //Debug.Log("Error message : " + e.Message);
                 onErrorCb("");
@@ -60,9 +53,8 @@ namespace UnityStomp {
             websocket.OnClosed += (a, b, c) => {
                 onCloseCb(c);
             };
-
             websocket.Open();
-
+            return connectedDone;
         }
 
         private string getKeyByDestination(string d) {
@@ -76,20 +68,25 @@ namespace UnityStomp {
             return null;
         }
 
-        private void onOpened() {
+        private void onOpened(object sender) {
             var connectString = StompString("CONNECT", new Dictionary<string, string>()
                                             {
                 {"accept-version", acceptVersion},
                 {"heart-beat", heartBeat}
             });
             websocket.Send(connectString);
+            Debug.Log("WebSocket connect...... "+sender);
+            connectedDone.done();
         }
 
 
-        private Dictionary<string, string> subscribeIdMap = new Dictionary<string, string>();
+        private void vaildOpen() {
+            if (!connectedDone.isDone()) throw new Exception("It`s not connected!!!");
+        }
 
         //Subscribe...
         private void Subscribe(string destination) {
+            vaildOpen();
             if (!subscribeIdMap.ContainsKey(destination)) {
                 string sid = "sub-" + subNo;
                 var subscribeString = StompString("SUBSCRIBE", new Dictionary<string, string>()                     {
