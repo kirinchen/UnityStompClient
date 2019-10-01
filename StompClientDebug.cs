@@ -27,7 +27,7 @@ namespace UnityStomp {
         public void SendMessage(string destination, string message) {
         }
 
-        public void SendMessage(string destination, string message, string subscribeDestination, OnMessageListener act) {
+        public void SendMessage(string destination, string message, string subscribeDestination, OnMessage act) {
         }
 
         public void SetCookie(string name, string value) {
@@ -40,7 +40,7 @@ namespace UnityStomp {
             return null;
         }
 
-        public void Subscribe(string destination, OnMessageListener act) {
+        public void Subscribe(string destination, OnMessage act) {
             if (match(destination, "/app/.+/joinBattle/.+")) {
                 act(JOINED_MSG);
             } else if (match(destination, "/message/rooms/.+/broadcast")) {

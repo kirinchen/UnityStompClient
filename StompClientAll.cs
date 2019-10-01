@@ -1,11 +1,9 @@
-﻿using UnityEngine;
-using System.Collections;
+﻿using BestHTTP.WebSocket;
+using surfm.tool;
 using System;
-using UnityStomp;
-using BestHTTP.WebSocket;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using surfm.tool;
+using UnityEngine;
 
 namespace UnityStomp {
     public class StompClientAll : StompClient {
@@ -17,8 +15,7 @@ namespace UnityStomp {
         private Action<string> onErrorCb = (s) => { };
         private Action<string> onCloseCb = (s) => { };
         private CallbackList connectedDone = new CallbackList();
-        private Dictionary<string, OnMessageListener> actionMap = new Dictionary<string, OnMessageListener>();
-        private Dictionary<string, string> subscribeIdMap = new Dictionary<string, string>();
+        private Dictionary<string, OnMessager> subscribeIdMap = new Dictionary<string, OnMessager>();
         public int subNo;
 
         public StompClientAll(string connectString, string sid = null) {
@@ -40,8 +37,7 @@ namespace UnityStomp {
                 if (resp.parse()) {
                     string key = getKeyByDestination(resp.getDestination());
                     if (key != null) {
-                        OnMessageListener a = actionMap[key];
-                        a(resp.getMessage());
+                         subscribeIdMap[key].onMsg(resp.getMessage());
                     }
                 }
             };
@@ -58,7 +54,7 @@ namespace UnityStomp {
         }
 
         private string getKeyByDestination(string d) {
-            foreach (string key in actionMap.Keys) {
+            foreach (string key in subscribeIdMap.Keys) {
                 Regex regex = new Regex(key, RegexOptions.IgnoreCase);
                 Match m = regex.Match(d);
                 if (m.Success) {
@@ -75,7 +71,7 @@ namespace UnityStomp {
                 {"heart-beat", heartBeat}
             });
             websocket.Send(connectString);
-            Debug.Log("WebSocket connect...... "+sender);
+            Debug.Log("WebSocket connect...... " + sender);
             connectedDone.done();
         }
 
@@ -85,36 +81,33 @@ namespace UnityStomp {
         }
 
         //Subscribe...
-        private void Subscribe(string destination) {
+        private OnMessager Subscribe(string destination) {
             vaildOpen();
             if (!subscribeIdMap.ContainsKey(destination)) {
                 string sid = "sub-" + subNo;
+                subscribeIdMap.Add(destination, new OnMessager(sid));
                 var subscribeString = StompString("SUBSCRIBE", new Dictionary<string, string>()                     {
                 {"id", sid},
                 {"destination", destination}
                 });
-                subscribeIdMap.Add(destination, sid);
                 websocket.Send(subscribeString);
                 subNo++;
             }
+            return subscribeIdMap[destination];
         }
 
         public void unSubscribe(string destination) {
-            string sid = subscribeIdMap[destination];
+            string sid = subscribeIdMap[destination].sid;
             subscribeIdMap.Remove(destination);
             var subscribeString = StompString("UNSUBSCRIBE", new Dictionary<string, string>()                     {
                 {"id", sid}
             });
             websocket.Send(subscribeString);
-            actionMap.Remove(destination);
         }
 
-        public void Subscribe(string destination, OnMessageListener act) {
-            if (actionMap.ContainsKey(destination)) {
-                actionMap.Remove(destination);
-            }
-            actionMap.Add(destination, act);
-            this.Subscribe(destination);
+        public void Subscribe(string destination, OnMessage act) {
+            OnMessager onMessager = this.Subscribe(destination);
+            onMessager.addAction(act);
         }
 
 
@@ -137,7 +130,7 @@ namespace UnityStomp {
             }
         }
 
-        public void SendMessage(string destination, string message, string subscribeDestination, OnMessageListener act) {
+        public void SendMessage(string destination, string message, string subscribeDestination, OnMessage act) {
             SendMessage(destination, message);
             Subscribe(subscribeDestination, act);
         }
@@ -154,17 +147,12 @@ namespace UnityStomp {
         }
 
         public static string StompString(string method, Dictionary<string, string> content) {
-
             string result;
-
             result = "[\"" + method + "\\n";
-
             foreach (var item in content) {
                 result = result + item.Key + ":" + item.Value + "\\n";
             }
-
             result = result + "\\n\\u0000\"]";
-
             return result;
         }
 
