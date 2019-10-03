@@ -31,6 +31,7 @@ namespace UnityStomp {
 
         //Stomp Connect...
         public CallbackList StompConnect() {
+            if (connectedDone.isDone()) return connectedDone;
             websocket.OnOpen += onOpened;
             websocket.OnMessage += (sender, e) => {
                 WsResponse resp = new WsResponse(e);
