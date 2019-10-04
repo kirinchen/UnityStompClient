@@ -17,6 +17,7 @@ namespace UnityStomp {
         private CallbackList connectedDone = new CallbackList();
         private Dictionary<string, OnMessager> subscribeIdMap = new Dictionary<string, OnMessager>();
         public int subNo;
+        private bool connecting = false;
 
         public StompClientAll(string connectString, string sid = null) {
             sessionId = string.IsNullOrEmpty(sid) ? UidUtils.getRandomString(8) : sid;
@@ -31,7 +32,8 @@ namespace UnityStomp {
 
         //Stomp Connect...
         public CallbackList StompConnect() {
-            if (connectedDone.isDone()) return connectedDone;
+            if (connecting || connectedDone.isDone()) return connectedDone;
+            connecting = true;
             websocket.OnOpen += onOpened;
             websocket.OnMessage += (sender, e) => {
                 WsResponse resp = new WsResponse(e);
