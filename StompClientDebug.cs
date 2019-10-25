@@ -36,7 +36,7 @@ namespace UnityStomp {
         public void setOnErrorAndClose(Action<string> errorCb, Action<string> cCb) {
         }
 
-        public CallbackList StompConnect() {
+        public InitCallBack StompConnect() {
             return null;
         }
 

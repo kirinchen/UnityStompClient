@@ -9,7 +9,7 @@ namespace UnityStomp {
     public interface StompClient {
         void SetCookie(string name, string value);
 
-        CallbackList StompConnect();
+        InitCallBack StompConnect();
 
         void setOnErrorAndClose(Action<string> errorCb, Action<string> closedCb);
 

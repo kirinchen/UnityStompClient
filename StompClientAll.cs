@@ -14,7 +14,7 @@ namespace UnityStomp {
         public static string heartBeat = "10000,10000";
         private Action<string> onErrorCb = (s) => { };
         private Action<string> onCloseCb = (s) => { };
-        private CallbackList connectedDone = new CallbackList();
+        private InitCallBack connectedDone = new InitCallBack();
         private Dictionary<string, OnMessager> subscribeIdMap = new Dictionary<string, OnMessager>();
         public int subNo;
         private bool connecting = false;
@@ -31,7 +31,7 @@ namespace UnityStomp {
         }
 
         //Stomp Connect...
-        public CallbackList StompConnect() {
+        public InitCallBack StompConnect() {
             if (connecting || connectedDone.isDone()) return connectedDone;
             connecting = true;
             websocket.OnOpen += onOpened;
